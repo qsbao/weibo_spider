@@ -1,3 +1,7 @@
+# 微博评论爬虫
+
+核心逻辑在[rmrb_spider/spiders/rmrb.py](rmrb_spider/spiders/rmrb.py)
+
 ## 安装
 1. 安装Python3
 2. 安装Python依赖
