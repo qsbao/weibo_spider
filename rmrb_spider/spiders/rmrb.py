@@ -8,7 +8,9 @@ class RmrbSpider(scrapy.Spider):
     allowed_domains = ["weibo.cn"]
 
     # 要爬取的微博账号
-    start_urls = ["https://weibo.cn/2803301701/profile?page=1"]
+    start_urls = [
+        "https://weibo.cn/search/?advancedfilter=1&keyword=疫情&nick=人民日报&starttime=20200101&endtime=20200630&sort=hot&smblog=搜索"
+    ]
 
     # 这里替换成登陆 https://weibo.cn 后的自己的Cookie
     # 打开调试模式能看到，或者网上查下获取Cookie的方法
@@ -31,6 +33,7 @@ class RmrbSpider(scrapy.Spider):
         for url in self.start_urls:
             yield Request(
                 url,
+                method="POST",
                 cookies=self.cookies,
                 callback=self.parse_tweet_page,
             )
