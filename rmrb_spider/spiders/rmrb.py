@@ -1,16 +1,12 @@
 import scrapy
 from scrapy import signals
 from scrapy import Request
+from datetime import timedelta, date
 
 
 class RmrbSpider(scrapy.Spider):
     name = "rmrb"
     allowed_domains = ["weibo.cn"]
-
-    # 要爬取的微博账号
-    start_urls = [
-        "https://weibo.cn/search/?advancedfilter=1&keyword=疫情&nick=人民日报&starttime=20200101&endtime=20200630&sort=hot&smblog=搜索"
-    ]
 
     # 这里替换成登陆 https://weibo.cn 后的自己的Cookie
     # 打开调试模式能看到，或者网上查下获取Cookie的方法
@@ -24,10 +20,21 @@ class RmrbSpider(scrapy.Spider):
     }
 
     # 最多爬取的微博的页数
-    max_tweet_pages = 5
+    max_tweet_pages = 1
 
     # 对于每条微博，爬取的最大的热门评论页数
-    max_comment_pages = 5
+    max_comment_pages = 1
+
+    def __init__(self, name=None, **kwargs):
+        # 要爬取的微博账号
+        self.start_urls = []
+        for single_date in (date(2020, 1, 1) + timedelta(n) for n in range(180)):
+            url = (
+                "https://weibo.cn/search/?advancedfilter=1&keyword=疫情&nick=人民日报&starttime=%s&endtime=%s&sort=hot&smblog=搜索"
+                % (single_date.strftime("%Y%m%d"), single_date.strftime("%Y%m%d"))
+            )
+            print(url)
+            self.start_urls.append(url)
 
     def start_requests(self):
         for url in self.start_urls:
@@ -81,9 +88,19 @@ class RmrbSpider(scrapy.Spider):
                 )
 
     def parse_comment_page(self, response):
-        comment_contents = response.css(".c .ctt::text").extract()
-        for content in comment_contents:
-            yield {"url": response.urljoin(""), "content": content}
+        comments = response.css(".c")
+        for comment in comments:
+            time = comment.css(".ct::text").get()
+            stars = comment.css(".cc a::text").get()
+
+            yield {
+                "url": response.urljoin(""),
+                "content": comment.css(".ctt::text").get(),
+                "time": None if time is None else time.split("\xa0来自网页")[0],
+                "stars": None
+                if stars is None
+                else int(stars.split("赞[")[1].split("]")[0]),
+            }
 
         elements = response.css(
             ".pa div:nth-child(1) a:nth-child(1)::attr(href)"
