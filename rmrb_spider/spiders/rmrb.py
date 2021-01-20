@@ -94,15 +94,18 @@ class RmrbSpider(scrapy.Spider):
             time = comment.css(".ct::text").get()
             stars = comment.css(".cc a::text").get()
 
-            if content is not None:
-                yield {
-                    "url": response.urljoin(""),
-                    "content": content,
-                    "time": None if time is None else time.split("\xa0来自网页")[0],
-                    "stars": None
-                    if stars is None
-                    else int(stars.split("赞[")[1].split("]")[0]),
-                }
+            try:
+                if content is not None:
+                    yield {
+                        "url": response.urljoin(""),
+                        "content": content,
+                        "time": None if time is None else time.split(u"\xa0来自网页")[0],
+                        "stars": None
+                        if stars is None
+                        else int(stars.split(u"赞[")[1].split("]")[0]),
+                    }
+            except:
+                pass
 
         elements = response.css(
             ".pa div:nth-child(1) a:nth-child(1)::attr(href)"
